@@ -1,3 +1,5 @@
+// Naranza Vinti, Copyright 2025 Andrea Davanzo and contributors, License AGPLv3
+
 package core
 
 import (
