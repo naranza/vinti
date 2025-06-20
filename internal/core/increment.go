@@ -12,10 +12,8 @@ func IncrementFile(config *Config, dir, name string) (string, *os.File, error) {
 		path := filepath.Join(config.Dir, dir, filename)
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
-			file, err := os.Create(path)
+			file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, config.FileModeFile)
 			if err == nil {
-				fmt.Println(err)
-				fmt.Println(path)
 				return filename, file, nil // Success!
 			}
 		}
