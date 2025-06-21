@@ -1,13 +1,14 @@
 // Naranza Vinti, Copyright 2025 Andrea Davanzo and contributors, License AGPLv3
 
-package core
+package command
 
 import (
 	"time"
 	"errors"
+	 "vinti/internal/core"
 )
 
-func Add(config *Config, dir string, data string) (string, error) {
+func Add(config *core.Config, dir string, data string) (string, error) {
 
 	baseName := Datetime(time.Now())
 	
@@ -24,5 +25,3 @@ func Add(config *Config, dir string, data string) (string, error) {
 			
 	return filename, err
 }
-
-

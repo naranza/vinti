@@ -1,0 +1,4 @@
+# comment
+filemode 
+increment_max int 999999
+increment_digits int 6

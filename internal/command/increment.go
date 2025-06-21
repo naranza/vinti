@@ -1,16 +1,17 @@
 // Naranza Vinti, Copyright 2025 Andrea Davanzo and contributors, License AGPLv3
 
-package core
+package command
 
 import (
   "fmt"
   "os"
   "path/filepath"
+	"vinti/internal/core"
 )
 
-func IncrementFile(config *Config, dir, name string) (string, *os.File, error) {
+func IncrementFile(config *core.Config, dir, name string) (string, *os.File, error) {
 	for i := 0; i <= config.IncrementMax; i++ {
-		filename := fmt.Sprintf("%s%0*d", name, config.increment_digits, i)
+		filename := fmt.Sprintf("%s%0*d", name, config.IncrementDigits, i)
 		path := filepath.Join(config.Dir, dir, filename)
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {

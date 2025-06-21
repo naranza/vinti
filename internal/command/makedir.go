@@ -1,15 +1,15 @@
 // Naranza Vinti, Copyright 2025 Andrea Davanzo and contributors, License AGPLv3
 
-package core
+package command
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
-	
+	"vinti/internal/core"
 )
 
-func MakeDir(config *Config, folder string) error {
+func MakeDir(config *core.Config, folder string) error {
 	fullPath := filepath.Join(config.Dir, folder)
 	err := os.MkdirAll(fullPath, config.FileModeDir)
 	if  err != nil {

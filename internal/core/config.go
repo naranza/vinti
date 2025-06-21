@@ -15,7 +15,7 @@ type Config struct {
   IncrementMax int
 	FileModeDir os.FileMode
 	FileModeFile os.FileMode
-  increment_digits int
+  IncrementDigits int
 }
 
 func DefaultConfig() *Config {
@@ -23,7 +23,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Dir: filepath.Join(os.TempDir(), "vinti"),
 		IncrementMax: maxVal,
-		increment_digits: len(strconv.Itoa(maxVal)),
+		IncrementDigits: len(strconv.Itoa(maxVal)),
 		FileModeDir: 0700,
 		FileModeFile: 0700,
 	}

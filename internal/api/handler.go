@@ -7,6 +7,7 @@ import (
   "log"
   "net/http"
 	"vinti/internal/core"
+	"vinti/internal/command"
 )
 
 // Common base request struct
@@ -79,125 +80,144 @@ var allowedCommands = map[string]bool{
   "ddi": true,
 }
 
+func writeHttpResponse(w http.ResponseWriter, statusCode int, response interface{}) {
+  w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to write JSON response: %v", err)
+	}
+}
+
 func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   var req Request
+	var response Response
+	
   decoder := json.NewDecoder(r.Body)
   if err := decoder.Decode(&req); err != nil {
-    writeError(w, http.StatusBadRequest, "Invalid JSON")
+  	response.Status = "error"
+		response.Message = "Invalid params"
+    writeHttpResponse(w, http.StatusBadRequest, response)
     return
   }
-
   if !allowedCommands[req.Cmd] {
-    writeError(w, http.StatusBadRequest, "Invalid command")
+    response.Status = "error"
+		response.Message = "Invalid command"
+    writeHttpResponse(w, http.StatusBadRequest, response)
     return
   }
 
+  log.Printf("Received request: Cmd=%q Params=%s", req.Cmd, string(req.Params))
+  
   switch req.Cmd {
   case "add":
     var params FolderDataParams
     if err := json.Unmarshal(req.Params, &params); err != nil {
-      writeError(w, http.StatusBadRequest, "Invalid params for add")
+			response.Status = "error"
+			response.Message = "Invalid params"
+      writeHttpResponse(w, http.StatusBadRequest, response)
       return
-    }
-    filename, err := core.Add(config, params.Folder, params.Data)
-	  if err != nil {
-	    writeError(w, http.StatusInternalServerError, "Failed to add data: "+err.Error())
-	  } else {
-			log.Printf("[add] folder=%q filename=%q", params.Folder, filename)
-			writeOK(w, filename)
 		}
-  case "get", "del", "arc":
-    var params FolderFileParams
-    if err := json.Unmarshal(req.Params, &params); err != nil {
-      writeError(w, http.StatusBadRequest, "Invalid params for "+req.Cmd)
+    
+		filename, err := command.Add(config, params.Folder, params.Data)
+		if err != nil {
+			response.Status = "error"
+			response.Message = "Failed to add data"
+      writeHttpResponse(w, http.StatusInternalServerError, response)
       return
-    }
-    // TODO: implement get/del/arc logic here
-    log.Printf("[%s] folder=%q file=%q", req.Cmd, params.Folder, params.File)
+		}
 
-    writeOK(w, req.Cmd+" executed successfully")
+	  response.Status = "ok"
+	  response.Message = filename
+    writeHttpResponse(w, http.StatusOK, response)
+		log.Printf("[add] folder=%q filename=%q", params.Folder, filename)
+    
+  case "get", "del", "arc":
+    // var params FolderFileParams
+    // if err := json.Unmarshal(req.Params, &params); err != nil {
+    //   writeError(w, http.StatusBadRequest, "Invalid params for "+req.Cmd)
+    //   return
+    // }
+    // // TODO: implement get/del/arc logic here
+    // log.Printf("[%s] folder=%q file=%q", req.Cmd, params.Folder, params.File)
+
+    // writeOK(w, req.Cmd+" executed successfully")
 
   case "sto":
-    var params FolderFileDataParams
-    if err := json.Unmarshal(req.Params, &params); err != nil {
-      writeError(w, http.StatusBadRequest, "Invalid params for sto")
-      return
-    }
-    // TODO: implement store logic here
-    log.Printf("[sto] folder=%q file=%q data=%q", params.Folder, params.File, params.Data)
+    // var params FolderFileDataParams
+    // if err := json.Unmarshal(req.Params, &params); err != nil {
+    //   writeError(w, http.StatusBadRequest, "Invalid params for sto")
+    //   return
+    // }
+    // // TODO: implement store logic here
+    // log.Printf("[sto] folder=%q file=%q data=%q", params.Folder, params.File, params.Data)
 
-    writeOK(w, "Data stored successfully")
+    // writeOK(w, "Data stored successfully")
 
   case "all", "mkd", "ddi":
     var params FolderParams
     if err := json.Unmarshal(req.Params, &params); err != nil {
-      writeError(w, http.StatusBadRequest, "Invalid params for "+req.Cmd)
+			response.Status = "error"
+			response.Message = "Invalid params"
+      writeHttpResponse(w, http.StatusBadRequest, response)
       return
     }
-    // TODO: implement all/mkd/ddi logic here
-    log.Printf("[%s] folder=%q", req.Cmd, params.Folder)
+		if req.Cmd == "mkd" {
+			err := command.MakeDir(config, params.Folder)
+			if err != nil {
+				response.Status = "error"
+				response.Message = "Cannot create folder"
+        writeHttpResponse(w, http.StatusInternalServerError, response)
+        return
+  		}
+			log.Printf("[mkd] folder=%q", params.Folder)
+			response.Status = "ok"
+			response.Message = "created"
+      writeHttpResponse(w, http.StatusOK, response)
+		}
+    // // Example for "all": return some dummy file list
+    // if req.Cmd == "all" {
+    //   resp := Response{
+    //     Status:  "ok",
+    //     Message: "",
+    //     Files:   []string{"file1.txt", "file2.txt", "file3.txt"},
+    //   }
+    //   writeJSON(w, resp)
+    //   return
+    // }
 
-    // Example for "all": return some dummy file list
-    if req.Cmd == "all" {
-      resp := Response{
-        Status:  "ok",
-        Message: "",
-        Files:   []string{"file1.txt", "file2.txt", "file3.txt"},
-      }
-      writeJSON(w, resp)
-      return
-    }
-
-    writeOK(w, req.Cmd+" executed successfully")
+    // writeOK(w, req.Cmd+" executed successfully")
 
   case "o2t":
-    var params O2tParams
-    if err := json.Unmarshal(req.Params, &params); err != nil {
-      writeError(w, http.StatusBadRequest, "Invalid params for o2t")
-      return
-    }
-    // TODO: implement OAuth2 token logic here
-    log.Printf("[o2t] client_id=%q scope=%q", params.ClientID, params.Scope)
+    // var params O2tParams
+    // if err := json.Unmarshal(req.Params, &params); err != nil {
+    //   writeError(w, http.StatusBadRequest, "Invalid params for o2t")
+    //   return
+    // }
+    // // TODO: implement OAuth2 token logic here
+    // log.Printf("[o2t] client_id=%q scope=%q", params.ClientID, params.Scope)
 
-    // Dummy token response example
-    resp := Response{
-      Status:  "ok",
-      Message: "",
-      O2: &O2tResponse{
-        AccessToken: "dummy-access-token",
-        TokenType:   "Bearer",
-        ExpiresIn:   3600,
-        Scope:       params.Scope,
-      },
-    }
-    writeJSON(w, resp)
+    // // Dummy token response example
+    // resp := Response{
+    //   Status:  "ok",
+    //   Message: "",
+    //   O2: &O2tResponse{
+    //     AccessToken: "dummy-access-token",
+    //     TokenType:   "Bearer",
+    //     ExpiresIn:   3600,
+    //     Scope:       params.Scope,
+    //   },
+    // }
+    // writeJSON(w, resp)
 
   default:
-    writeError(w, http.StatusNotImplemented, "Command not implemented")
+    // writeError(w, http.StatusNotImplemented, "Command not implemented")
   }
-}
+  
+  
 
-// Helper to write JSON OK response with message
-func writeOK(w http.ResponseWriter, msg string) {
-  writeJSON(w, Response{
-    Status:  "ok",
-    Message: msg,
-  })
-}
-
-// Helper to write JSON error response
-func writeError(w http.ResponseWriter, statusCode int, msg string) {
-  w.WriteHeader(statusCode)
-  writeJSON(w, Response{
-    Status:  "error",
-    Message: msg,
-  })
-}
-
-// Helper to write any JSON response
-func writeJSON(w http.ResponseWriter, v interface{}) {
-  w.Header().Set("Content-Type", "application/json")
-  if err := json.NewEncoder(w).Encode(v); err != nil {
-    log.Printf("Failed to write JSON response: %v", err)
-  }
+	// w.Header().Set("Content-Type", "application/json")
+	// w.WriteHeader(statusCode)
+	// if err := json.NewEncoder(w).Encode(response); err != nil {
+	// 	log.Printf("Failed to write JSON response: %v", err)
+	// }
 }

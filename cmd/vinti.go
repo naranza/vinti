@@ -16,13 +16,13 @@ var config string
 func main() {
   config, err := core.ConfigLoad("config/config.cogo")
   if err != nil {
-      log.Fatalf("Failed to load config: %v", err)
+    log.Fatalf("Failed to load config: %v", err)
   }
   fmt.Println(config)
 
   // Wrap the handler so config can be passed
   http.HandleFunc("/run", func(w http.ResponseWriter, r *http.Request) {
-      api.APIHandler(config, w, r)
+    api.APIHandler(config, w, r)
   })
 
   log.Println("API server running on :8080")
