@@ -117,16 +117,15 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   case "arc":
     // to do
   case "sto":
-    // var params FolderFileDataParams
-    // if err := json.Unmarshal(req.Params, &params); err != nil {
-      //   writeError(w, http.StatusBadRequest, "Invalid params for sto")
-      //   return
-      // }
-      // // TODO: implement store logic here
-      // log.Printf("[sto] folder=%q file=%q data=%q", params.Folder, params.File, params.Data)
-      
-      // writeOK(w, "Data stored successfully")
-      
+    err := command.Sto(config, request.Folder, request.File, request.Data) 
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Failed to sto data"
+    } else {
+      response.Code = http.StatusOK
+      response.Message = "done"
+      log.Printf("[sto] folder=%q filename=%q", request.Folder, request.File)
+    }
   case "all":
     files, err := command.All(config, request.Folder)
   	if err != nil {
@@ -135,7 +134,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   	} else {
   		response.Code = http.StatusOK
   		response.Files = files
-  		response.Message = "OK"
+  		response.Message = "done"
   		log.Printf("[all] folder=%q numfiles=%d", request.Folder, len(files))
   	}
   case "mkd":

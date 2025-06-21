@@ -18,13 +18,22 @@ func main() {
   if err != nil {
     log.Fatalf("Failed to load config: %v", err)
   }
-  fmt.Println(config)
+  fmt.Print("Config loaded\n")
 
-  // Wrap the handler so config can be passed
-  http.HandleFunc("/run", func(w http.ResponseWriter, r *http.Request) {
+  http.HandleFunc("/submit", func(w http.ResponseWriter, r *http.Request) {
     api.APIHandler(config, w, r)
   })
 
-  log.Println("API server running on :8080")
-  log.Fatal(http.ListenAndServe(":8080", nil))
+  addr := fmt.Sprintf(":%d", config.ServerPort)
+  if config.TlsCertPath != "" && config.TlsKeyPath != "" {
+    log.Printf("Starting SSL Vinti server on port %d", config.ServerPort)
+    err = http.ListenAndServeTLS(addr, config.TlsCertPath, config.TlsKeyPath, nil)
+  } else {
+    log.Printf("Starting Vinti server on port %d", config.ServerPort)
+    err = http.ListenAndServe(addr, nil)
+  }
+
+  if err != nil {
+    log.Fatalf("Server failed: %v", err)
+  }
 }
