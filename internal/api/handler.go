@@ -128,7 +128,16 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       // writeOK(w, "Data stored successfully")
       
   case "all":
-    // to do
+    files, err := command.All(config, request.Folder)
+  	if err != nil {
+  		response.Code = http.StatusInternalServerError
+  		response.Message = "Failed to list files"
+  	} else {
+  		response.Code = http.StatusOK
+  		response.Files = files
+  		response.Message = "OK"
+  		log.Printf("[all] folder=%q numfiles=%d", request.Folder, len(files))
+  	}
   case "mkd":
   	err := command.MakeDir(config, request.Folder)
 		if err != nil {
