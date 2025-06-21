@@ -3,6 +3,7 @@
 package api
 
 import (
+  "os"
   "encoding/json"
   "log"
   "net/http"
@@ -99,8 +100,20 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       response.Message = result
     }
   case "del":
-    // to do
-    
+    err := command.Del(config, request.Folder, request.File)
+	  if err != nil {
+  		if os.IsNotExist(err) {
+  			response.Code = http.StatusNotFound
+  			response.Message = "File not found"
+  		} else {
+  			response.Code = http.StatusInternalServerError
+  			response.Message = "Failed to delete file"
+  		}
+  	} else {
+  		log.Printf("[del] folder=%q file=%q", request.Folder, request.File)
+  		response.Code = http.StatusOK
+  		response.Message = "done"
+    }
   case "arc":
     // to do
   case "sto":
@@ -124,7 +137,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
 		} else {
   		log.Printf("[mkd] folder=%q", request.Folder)
   		response.Code = http.StatusOK
-  		response.Message = "created"
+  		response.Message = "done"
 		}
   case "ddi":
     // // Example for "all": return some dummy file list
