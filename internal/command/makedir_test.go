@@ -6,10 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"vinti/internal/core"
 )
 
 func TestMakeDir_Success(t *testing.T) {
-	config := DefaultConfig()
+	config := core.DefaultConfig()
 	tmpDir := "Success"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.RemoveAll(testPath)
@@ -29,7 +30,7 @@ func TestMakeDir_Success(t *testing.T) {
 }
 
 func TestMakeDir_Fail(t *testing.T) {
-	config := DefaultConfig()
+	config := core.DefaultConfig()
 	tmpDir := "Fail"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.RemoveAll(testPath)

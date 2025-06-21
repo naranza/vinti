@@ -10,62 +10,31 @@ import (
 	"vinti/internal/command"
 )
 
-// Common base request struct
-type Request struct {
-  Cmd    string          `json:"cmd"`
-  Params json.RawMessage `json:"params"` // to unmarshal dynamically per command
-}
-
-// Add Command Params
-type FolderDataParams struct {
-  Folder string `json:"folder"`
-  Data   string `json:"data"`
-}
-
-// Get Command Params
-// Del Command Params
-// Arc Command Params
-type FolderFileParams struct {
-  Folder string `json:"folder"`
-  File   string `json:"file"`
-}
-
-// Sto Command Params
-type FolderFileDataParams struct {
-  Folder string `json:"folder"`
-  File   string `json:"file"`
-  Data   string `json:"data"`
-}
-
-// MkD Command Params
-// All Command Params
-// Ddi Command Params
-type FolderParams struct {
-  Folder string `json:"folder"`
-}
-
-// OAuth2 Token Command Params (02t)
-type O2tParams struct {
-  GrantType    string `json:"grant_type"`
-  ClientID     string `json:"client_id"`
-  ClientSecret string `json:"client_secret"`
-  Scope        string `json:"scope"`
+type ApiRequest struct {
+	Cmd          string `json:"cmd"`
+	Folder       string `json:"folder,omitempty"`
+	File         string `json:"file,omitempty"`
+	Data         string `json:"data,omitempty"`
+	GrantType    string `json:"grant_type,omitempty"`
+	ClientID     string `json:"client_id,omitempty"`
+	ClientSecret string `json:"client_secret,omitempty"`
+	Scope        string `json:"scope,omitempty"`
 }
 
 // Standard Response
-type Response struct {
-    Status  string      `json:"status"`           // e.g. "ok", "error", "invalid_token", etc.
-    Message string      `json:"message"`          // description or content
-    Files   []string    `json:"files,omitempty"`  // used for 'all' command
-    O2      *O2tResponse `json:"o2,omitempty"`    // used for oauth token response
+type ApiResponse struct {
+  Code  int      `json:"code"`           // e.g. "ok", "error", "invalid_token", etc.
+  Message string      `json:"message"`          // description or content
+  Files   []string    `json:"files,omitempty"`  // used for 'all' command
+  O2      *O2tResponse `json:"o2,omitempty"`    // used for oauth token response
 }
 
 // OAuth2 Token Response payload
 type O2tResponse struct {
-    AccessToken string `json:"access_token"`
-    TokenType   string `json:"token_type"`
-    ExpiresIn   int    `json:"expires_in"`
-    Scope       string `json:"scope"`
+  AccessToken string `json:"access_token"`
+  TokenType   string `json:"token_type"`
+  ExpiresIn   int    `json:"expires_in"`
+  Scope       string `json:"scope"`
 }
 
 var allowedCommands = map[string]bool{
@@ -80,100 +49,84 @@ var allowedCommands = map[string]bool{
   "ddi": true,
 }
 
-func writeHttpResponse(w http.ResponseWriter, statusCode int, response interface{}) {
+func writeHttpResponse(w http.ResponseWriter, response ApiResponse) {
   w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
+	w.WriteHeader(response.Code)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Failed to write JSON response: %v", err)
 	}
 }
 
 func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
-  var req Request
-	var response Response
+  var request ApiRequest
+	var response ApiResponse
 	
   decoder := json.NewDecoder(r.Body)
-  if err := decoder.Decode(&req); err != nil {
-  	response.Status = "error"
+  err := decoder.Decode(&request)
+  if err != nil {
+  	response.Code = http.StatusBadRequest
 		response.Message = "Invalid params"
-    writeHttpResponse(w, http.StatusBadRequest, response)
+    writeHttpResponse(w, response)
     return
   }
-  if !allowedCommands[req.Cmd] {
-    response.Status = "error"
+  if !allowedCommands[request.Cmd] {
+    response.Code = http.StatusBadRequest
 		response.Message = "Invalid command"
-    writeHttpResponse(w, http.StatusBadRequest, response)
+    writeHttpResponse(w, response)
     return
   }
 
-  log.Printf("Received request: Cmd=%q Params=%s", req.Cmd, string(req.Params))
-  
-  switch req.Cmd {
+  switch request.Cmd {
   case "add":
-    var params FolderDataParams
-    if err := json.Unmarshal(req.Params, &params); err != nil {
-			response.Status = "error"
-			response.Message = "Invalid params"
-      writeHttpResponse(w, http.StatusBadRequest, response)
-      return
-		}
+    filename, err := command.Add(config, request.Folder, request.Data)
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Failed to add data"
+    } else {
+      response.Code = http.StatusOK
+      response.Message = filename
+      log.Printf("[add] folder=%q filename=%q", request.Folder, filename)
+    }
     
-		filename, err := command.Add(config, params.Folder, params.Data)
+  case "get":
+    result, err := command.Get(config, request.Folder, request.File)
 		if err != nil {
-			response.Status = "error"
-			response.Message = "Failed to add data"
-      writeHttpResponse(w, http.StatusInternalServerError, response)
-      return
-		}
-
-	  response.Status = "ok"
-	  response.Message = filename
-    writeHttpResponse(w, http.StatusOK, response)
-		log.Printf("[add] folder=%q filename=%q", params.Folder, filename)
+			response.Code = http.StatusInternalServerError
+			response.Message = "Cannot create folder"
+  	} else {
+      log.Printf("[mkd] folder=%q", request.Folder)
+      response.Code = http.StatusOK
+      response.Message = result
+    }
+  case "del":
+    // to do
     
-  case "get", "del", "arc":
-    // var params FolderFileParams
-    // if err := json.Unmarshal(req.Params, &params); err != nil {
-    //   writeError(w, http.StatusBadRequest, "Invalid params for "+req.Cmd)
-    //   return
-    // }
-    // // TODO: implement get/del/arc logic here
-    // log.Printf("[%s] folder=%q file=%q", req.Cmd, params.Folder, params.File)
-
-    // writeOK(w, req.Cmd+" executed successfully")
-
+  case "arc":
+    // to do
   case "sto":
     // var params FolderFileDataParams
     // if err := json.Unmarshal(req.Params, &params); err != nil {
-    //   writeError(w, http.StatusBadRequest, "Invalid params for sto")
-    //   return
-    // }
-    // // TODO: implement store logic here
-    // log.Printf("[sto] folder=%q file=%q data=%q", params.Folder, params.File, params.Data)
-
-    // writeOK(w, "Data stored successfully")
-
-  case "all", "mkd", "ddi":
-    var params FolderParams
-    if err := json.Unmarshal(req.Params, &params); err != nil {
-			response.Status = "error"
-			response.Message = "Invalid params"
-      writeHttpResponse(w, http.StatusBadRequest, response)
-      return
-    }
-		if req.Cmd == "mkd" {
-			err := command.MakeDir(config, params.Folder)
-			if err != nil {
-				response.Status = "error"
-				response.Message = "Cannot create folder"
-        writeHttpResponse(w, http.StatusInternalServerError, response)
-        return
-  		}
-			log.Printf("[mkd] folder=%q", params.Folder)
-			response.Status = "ok"
-			response.Message = "created"
-      writeHttpResponse(w, http.StatusOK, response)
+      //   writeError(w, http.StatusBadRequest, "Invalid params for sto")
+      //   return
+      // }
+      // // TODO: implement store logic here
+      // log.Printf("[sto] folder=%q file=%q data=%q", params.Folder, params.File, params.Data)
+      
+      // writeOK(w, "Data stored successfully")
+      
+  case "all":
+    // to do
+  case "mkd":
+  	err := command.MakeDir(config, request.Folder)
+		if err != nil {
+			response.Code = http.StatusInternalServerError
+			response.Message = "Cannot create folder"
+		} else {
+  		log.Printf("[mkd] folder=%q", request.Folder)
+  		response.Code = http.StatusOK
+  		response.Message = "created"
 		}
+  case "ddi":
     // // Example for "all": return some dummy file list
     // if req.Cmd == "all" {
     //   resp := Response{
@@ -212,7 +165,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   default:
     // writeError(w, http.StatusNotImplemented, "Command not implemented")
   }
-  
+  writeHttpResponse(w, response)
   
 
 	// w.Header().Set("Content-Type", "application/json")

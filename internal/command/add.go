@@ -5,7 +5,7 @@ package command
 import (
 	"time"
 	"errors"
-	 "vinti/internal/core"
+	"vinti/internal/core"
 )
 
 func Add(config *core.Config, dir string, data string) (string, error) {

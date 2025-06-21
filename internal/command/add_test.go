@@ -9,9 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"vinti/internal/core"
 )
 
-func AddTest(config *Config, dir string, data string, testCase string) (filename string, err error) {
+func AddTest(config *core.Config, dir string, data string, testCase string) (filename string, err error) {
 
 	baseName := Datetime(time.Now())
 	
@@ -39,7 +40,7 @@ func AddTest(config *Config, dir string, data string, testCase string) (filename
 
 
 func TestVintiAdd_Success(t *testing.T) {
-	config := DefaultConfig()
+	config := core.DefaultConfig()
 	tmpDir := "AddTest"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.MkdirAll(testPath, config.FileModeDir)
@@ -82,7 +83,7 @@ func TestVintiAdd_Success(t *testing.T) {
 
 
 func TestVintiAdd_WriteError(t *testing.T) {
-	config := DefaultConfig()
+	config := core.DefaultConfig()
 	tmpDir := "AddTest"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.MkdirAll(testPath, config.FileModeDir)
@@ -96,7 +97,7 @@ func TestVintiAdd_WriteError(t *testing.T) {
 }
 
 func TestVintiAdd_CloseError(t *testing.T) {
-	config := DefaultConfig()
+	config := core.DefaultConfig()
 	tmpDir := "AddTest"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.MkdirAll(testPath, config.FileModeDir)

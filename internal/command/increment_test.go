@@ -6,10 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"vinti/internal/core"
 )
 
 func TestIncrementFile_FirstAvailable(t *testing.T) {
-	config := DefaultConfig()
+	config := core.DefaultConfig()
 	tmpDir := "FirstAvailable"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.RemoveAll(testPath)
@@ -36,7 +37,7 @@ func TestIncrementFile_FirstAvailable(t *testing.T) {
 }
 
 func TestIncrementFile_LaterAvailable(t *testing.T) {
-	config := DefaultConfig()
+	config := core.DefaultConfig()
 	tmpDir := "LaterAvailable"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.RemoveAll(testPath)
@@ -65,7 +66,7 @@ func TestIncrementFile_LaterAvailable(t *testing.T) {
 }
 
 func TestIncrementFile_NoAvailable(t *testing.T) {
-	config := DefaultConfig()
+	config := core.DefaultConfig()
 	tmpDir := "NoAvailable"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.RemoveAll(testPath)
