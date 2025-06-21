@@ -16,6 +16,10 @@ type Config struct {
 	FileModeDir os.FileMode
 	FileModeFile os.FileMode
   IncrementDigits int
+	// Add these for SSL
+  TlsCertPath string
+  TlsKeyPath string
+  ServerPort int
 }
 
 func DefaultConfig() *Config {
@@ -26,6 +30,9 @@ func DefaultConfig() *Config {
 		IncrementDigits: len(strconv.Itoa(maxVal)),
 		FileModeDir: 0700,
 		FileModeFile: 0700,
+		TlsCertPath: "",
+		TlsKeyPath: "",
+		ServerPort: 20201,
 	}
 }
 
