@@ -2,4 +2,4 @@ module vinti
 
 go 1.24.4
 
-require gitlab.com/naranza/cogo v0.2025.2 // indirect
+require github.com/naranza/cogo v1.2025.2

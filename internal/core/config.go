@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"gitlab.com/naranza/cogo"
+	"github.com/naranza/cogo"
 )
 
 type Config struct {

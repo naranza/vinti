@@ -1,4 +1,2 @@
-gitlab.com/naranza/cogo v0.0.0-20250613220115-7e641cc2c988 h1:L4Mkg0921yvl0wmDyW8q/YRR9ZBSfcA93bHp5B4Iz68=
-gitlab.com/naranza/cogo v0.0.0-20250613220115-7e641cc2c988/go.mod h1:o2rOYliuqJ+fnPqNGYYW4O9t42vQFcHxNXCIlALhT2Y=
-gitlab.com/naranza/cogo v0.2025.2 h1:wlWsDYX/6+YEXTTVEPfsytLwcsa74nbSaPUM89T5s3I=
-gitlab.com/naranza/cogo v0.2025.2/go.mod h1:o2rOYliuqJ+fnPqNGYYW4O9t42vQFcHxNXCIlALhT2Y=
+github.com/naranza/cogo v1.2025.2 h1:uvnYt4cJH65TsgagNE2JOnyAM/jqnrzI0zYcJ4n+gVs=
+github.com/naranza/cogo v1.2025.2/go.mod h1:QKBdPYrWOfiEhHx86GVg9NU/js5RltrgTWNpV7VL984=
