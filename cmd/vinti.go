@@ -6,7 +6,8 @@ import (
     "fmt"
     "log"
     "net/http"
-    // "os"
+    "os"
+    "path/filepath"
     "vinti/internal/core"
     "vinti/internal/api"
 )
@@ -14,11 +15,17 @@ import (
 var config string
 
 func main() {
-  config, err := core.ConfigLoad("config/config.cogo")
-  if err != nil {
-    log.Fatalf("Failed to load config: %v", err)
-  }
-  fmt.Print("Config loaded\n")
+  // Load config
+	absPath, err := filepath.Abs("config/config.cogo")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+		os.Exit(1)
+	}
+	config, err := core.ConfigLoad(absPath)
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+		os.Exit(1)
+	}
 
   http.HandleFunc("/submit", func(w http.ResponseWriter, r *http.Request) {
     api.APIHandler(config, w, r)

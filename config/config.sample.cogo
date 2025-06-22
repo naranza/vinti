@@ -1,4 +1,11 @@
-# comment
-filemode 
-increment_max int 999999
-increment_digits int 6
+# List of clients to initialize
+
+Dir string /storage
+IncrementMax int 999999
+# IncrementDigits int 6
+FileModeDir fileMode 600
+FileModeFile fileMode 600
+# TlsCertPath string ""
+# TlsKeyPath string ""
+ServerPort int 20201
+TokenExpiresIn int 3600

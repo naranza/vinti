@@ -118,7 +118,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   		response.Message = "done"
 		}
   case "ci-set":
-    if request.ClientID == "" || request.ClientSecret == "" || request.Scope == "" {
+    if request.ClientID == "" || request.ClientSecret == "" || request.Role == "" {
       response.Code = http.StatusBadRequest
       response.Message = "Missing fields for aci"
       break
@@ -127,7 +127,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
     client := map[string]string{
       "client_id": request.ClientID,
       "client_secret": request.ClientSecret,
-      "scope": request.Scope,
+      "Role": request.Role,
     }
     data, _ := json.Marshal(client)
     err := command.FileWrite(config, "_client_id", request.ClientID, string(data))
@@ -152,7 +152,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       response.AccessToken = accessToken
   		response.TokenType = "Bearer"
   		response.ExpiresIn = config.TokenExpiresIn
-  		response.Scope = "acbd"
+  		response.Role = "acbd"
       // If no error, response is already filled by O2t
       log.Printf("[to-req] client_id=%q token=%q", request.ClientID, response.AccessToken)
     }
