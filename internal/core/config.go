@@ -41,8 +41,8 @@ func DefaultConfig() *Config {
 func ConfigLoad(path string) (*Config, error) {
 	config := DefaultConfig()
 	_, err := os.Stat(path)
-	if os.IsExist(err) {
-	  err := cogo.LoadConfig(path, &config)
+	if err == nil {
+		err := cogo.LoadConfig(path, config)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to load config: %w", err)
 		}
