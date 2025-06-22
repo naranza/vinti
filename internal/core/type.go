@@ -22,7 +22,6 @@ type ApiResponse struct {
 	AccessToken string 	`json:"access_token,omitempty"`
 	TokenType   string 	`json:"token_type,omitempty"`
 	ExpiresIn   int    	`json:"expires_in,omitempty"`
-	Role       string 	`json:"scope,omitempty"`
 }
 
 type TokenData struct {

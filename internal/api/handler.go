@@ -140,7 +140,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       log.Printf("[aci] stored client_id=%q", request.ClientID)
     }
  case "to-req":
-    // Validate client_id/client_secret here if needed
+    // token-request
 
     accessToken, err := command.TokenRequest(config, request.ClientID)
     if err != nil {
@@ -152,7 +152,6 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       response.AccessToken = accessToken
   		response.TokenType = "Bearer"
   		response.ExpiresIn = config.TokenExpiresIn
-  		response.Role = "acbd"
       // If no error, response is already filled by O2t
       log.Printf("[to-req] client_id=%q token=%q", request.ClientID, response.AccessToken)
     }
