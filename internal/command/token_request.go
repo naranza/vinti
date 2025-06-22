@@ -9,7 +9,7 @@ import (
 	"vinti/internal/core"
 )
 
-func O2t(config *core.Config, clientID string) ( string, error) {
+func TokenRequest(config *core.Config, clientID string) ( string, error) {
 
 	expireTime := time.Now().Add(time.Second * time.Duration(config.TokenExpiresIn))
 
@@ -22,7 +22,7 @@ func O2t(config *core.Config, clientID string) ( string, error) {
 
 	tokenByte, err := json.Marshal(tokenData)
 	if err == nil {
-		err = Sto(config, "_token", token, string(tokenByte))
+		err = FileWrite(config, "_token", token, string(tokenByte))
 	}
 
 	if err != nil {

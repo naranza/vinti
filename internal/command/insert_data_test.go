@@ -12,7 +12,7 @@ import (
 	"vinti/internal/core"
 )
 
-func AddTest(config *core.Config, dir string, data string, testCase string) (filename string, err error) {
+func InsertDataTest(config *core.Config, dir string, data string, testCase string) (filename string, err error) {
 
 	baseName := Datetime(time.Now())
 	
@@ -39,15 +39,15 @@ func AddTest(config *core.Config, dir string, data string, testCase string) (fil
 }
 
 
-func TestVintiAdd_Success(t *testing.T) {
+func TestInsertData_Success(t *testing.T) {
 	config := core.DefaultConfig()
-	tmpDir := "AddTest"
+	tmpDir := "InsertDataTest"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.MkdirAll(testPath, config.FileModeDir)
 
 	data := "hello world"
 	
-	filename, err := Add(config, tmpDir, data)
+	filename, err := InsertData(config, tmpDir, data)
 	if err != nil {
 		t.Fatalf("Add returned error: %v", err)
 	}
@@ -82,32 +82,30 @@ func TestVintiAdd_Success(t *testing.T) {
 }
 
 
-func TestVintiAdd_WriteError(t *testing.T) {
+func TestInsertData_WriteError(t *testing.T) {
 	config := core.DefaultConfig()
-	tmpDir := "AddTest"
+	tmpDir := "InsertDataTest"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.MkdirAll(testPath, config.FileModeDir)
 
 	data := "hello world"
 	
-	_, err := AddTest(config, tmpDir, data, "write")
+	_, err := InsertDataTest(config, tmpDir, data, "write")
 	if err == nil {
 		t.Fatalf("Error expected, got: %v", err)
 	}
 }
 
-func TestVintiAdd_CloseError(t *testing.T) {
+func TestInsertData_CloseError(t *testing.T) {
 	config := core.DefaultConfig()
-	tmpDir := "AddTest"
+	tmpDir := "InsertDataTest"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.MkdirAll(testPath, config.FileModeDir)
 
 	data := "hello world"
 	
-	_, err := AddTest(config, tmpDir, data, "close")
+	_, err := InsertDataTest(config, tmpDir, data, "close")
 	if err == nil {
 		t.Fatalf("Error expected, got: %v", err)
 	}
 }
-
-// You can add more tests for failure cases if needed, e.g., invalid dir, no permission, etc.

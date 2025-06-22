@@ -9,9 +9,9 @@ import (
 	"vinti/internal/core"
 )
 
-func TestAll_Success(t *testing.T) {
+func TestFileList_Success(t *testing.T) {
 	config := core.DefaultConfig()
-	dir := "AllSuccess"
+	dir := "FileListSuccess"
 	testPath := filepath.Join(config.Dir, dir)
 	os.RemoveAll(testPath)
 
@@ -27,7 +27,7 @@ func TestAll_Success(t *testing.T) {
 		}
 	}
 
-	files, err := All(config, dir)
+	files, err := FileList(config, dir)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -48,15 +48,15 @@ func TestAll_Success(t *testing.T) {
 	}
 }
 
-func TestAll_Fail(t *testing.T) {
+func TestFileList_Fail(t *testing.T) {
 	config := core.DefaultConfig()
-	dir := "AllFail"
+	dir := "FileListFail"
 	testPath := filepath.Join(config.Dir, dir)
 	os.RemoveAll(testPath)
 
 	// Don't create directory, so it doesn't exist
 
-	_, err := All(config, dir)
+	_, err := FileList(config, dir)
 	if err == nil {
 		t.Fatal("Expected error when listing files from non-existent directory, got nil")
 	}

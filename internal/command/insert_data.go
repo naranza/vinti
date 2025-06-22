@@ -3,20 +3,25 @@
 package command
 
 import (
+	"time"
 	"errors"
-	"os"
-	"path/filepath"
 	"vinti/internal/core"
 )
 
-func Sto(config *core.Config, dir string, filename string, data string) error {
-	fullPath := filepath.Join(config.Dir, dir, filename)
+func InsertData(config *core.Config, dir string, data string) (string, error) {
 
-	file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE|os.O_SYNC, config.FileModeFile)
+	baseName := Datetime(time.Now())
+	
+	filename, file, err := IncrementFile(config, dir, baseName)
+	
 	if err == nil {
 		_, errWrite := file.WriteString(data)
 		errClose := file.Close()
 		err = errors.Join(errWrite, errClose)
+		if err != nil {
+			filename = ""
+		}
 	}
-	return err
+			
+	return filename, err
 }

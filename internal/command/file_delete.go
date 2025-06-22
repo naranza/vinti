@@ -8,7 +8,7 @@ import (
 	"vinti/internal/core"
 )
 
-func Del(config *core.Config, dir string, filename string) error {
+func FileDelete(config *core.Config, dir string, filename string) error {
 	fullPath := filepath.Join(config.Dir, dir, filename)
 
 	return  os.Remove(fullPath)

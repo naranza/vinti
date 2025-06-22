@@ -9,7 +9,7 @@ import (
 	"vinti/internal/core"
 )
 
-func MakeDir(config *core.Config, folder string) error {
+func FolderInsert(config *core.Config, folder string) error {
 	fullPath := filepath.Join(config.Dir, folder)
 	err := os.MkdirAll(fullPath, config.FileModeDir)
 	if  err != nil {

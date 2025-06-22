@@ -8,7 +8,7 @@ import (
 	"vinti/internal/core"
 )
 
-func Get(config *core.Config, dir string, filename string) (string, error) {
+func FileRead(config *core.Config, dir string, filename string) (string, error) {
 	fullPath := filepath.Join(config.Dir, dir, filename)
 
 	data, err := os.ReadFile(fullPath)

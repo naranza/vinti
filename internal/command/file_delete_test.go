@@ -10,7 +10,7 @@ import (
 	"vinti/internal/core"
 )
 
-func TestDel_Success(t *testing.T) {
+func TestFileDelete_Success(t *testing.T) {
 	config := core.DefaultConfig()
 	dir := "DelSuccess"
 	fileName := "testfile.txt"
@@ -29,7 +29,7 @@ func TestDel_Success(t *testing.T) {
 	}
 
 	// Delete the file
-	err := Del(config, dir, fileName)
+	err := FileDelete(config, dir, fileName)
 	if err != nil {
 		t.Fatalf("Expected no error deleting file, got %v", err)
 	}
@@ -40,7 +40,7 @@ func TestDel_Success(t *testing.T) {
 	}
 }
 
-func TestDel_FileNotExist(t *testing.T) {
+func TestFileDelete_FileNotExist(t *testing.T) {
 	config := core.DefaultConfig()
 	dir := "DelFail"
 	fileName := "nonexistent.txt"
@@ -53,7 +53,7 @@ func TestDel_FileNotExist(t *testing.T) {
 	}
 
 	// Attempt to delete non-existent file
-	err := Del(config, dir, fileName)
+	err := FileDelete(config, dir, fileName)
 	if err == nil {
 		t.Fatal("Expected error when deleting non-existent file, got nil")
 	}

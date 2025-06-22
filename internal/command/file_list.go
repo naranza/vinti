@@ -8,7 +8,7 @@ import (
 	"vinti/internal/core"
 )
 
-func All(config *core.Config, dir string) ([]string, error) {
+func FileList(config *core.Config, dir string) ([]string, error) {
 	fullPath := filepath.Join(config.Dir, dir)
 
 	entries, err := os.ReadDir(fullPath)

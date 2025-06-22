@@ -10,7 +10,7 @@ import (
 	"vinti/internal/core"
 )
 
-func TestGet_Success(t *testing.T) {
+func TestFileRead_Success(t *testing.T) {
 	config := core.DefaultConfig()
 	dir := "GetSuccess"
 	fileName := "testfile.txt"
@@ -28,7 +28,7 @@ func TestGet_Success(t *testing.T) {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	result, err := Get(config, dir, fileName)
+	result, err := FileRead(config, dir, fileName)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -37,7 +37,7 @@ func TestGet_Success(t *testing.T) {
 	}
 }
 
-func TestGet_FileNotExist(t *testing.T) {
+func TestFileRead_FileNotExist(t *testing.T) {
 	config := core.DefaultConfig()
 	dir := "GetFail"
 	fileName := "nonexistent.txt"
@@ -47,7 +47,7 @@ func TestGet_FileNotExist(t *testing.T) {
 	os.RemoveAll(testPath)
 	os.MkdirAll(testPath, config.FileModeDir)
 
-	_, err := Get(config, dir, fileName)
+	_, err := FileRead(config, dir, fileName)
 	if err == nil {
 		t.Fatal("Expected error when getting non-existent file, got nil")
 	}

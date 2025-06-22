@@ -9,15 +9,15 @@ import (
 	"vinti/internal/core"
 )
 
-func TestMakeDir_Success(t *testing.T) {
+func TestFolderInsert_Success(t *testing.T) {
 	config := core.DefaultConfig()
 	tmpDir := "Success"
 	testPath := filepath.Join(config.Dir, tmpDir)
 	os.RemoveAll(testPath)
 	
-	err := MakeDir(config, tmpDir)
+	err := FolderInsert(config, tmpDir)
 	if err != nil {
-		t.Fatalf("MakeDir failed: %v", err)
+		t.Fatalf("FolderInsert failed: %v", err)
 	}
 
 	info, err := os.Stat(testPath)
@@ -29,7 +29,7 @@ func TestMakeDir_Success(t *testing.T) {
 	}
 }
 
-func TestMakeDir_Fail(t *testing.T) {
+func TestFolderInsert_Fail(t *testing.T) {
 	config := core.DefaultConfig()
 	tmpDir := "Fail"
 	testPath := filepath.Join(config.Dir, tmpDir)
@@ -37,7 +37,7 @@ func TestMakeDir_Fail(t *testing.T) {
 	
 	file, err := os.Create(testPath)
 	file.Close()
-	err = MakeDir(config, tmpDir)
+	err = FolderInsert(config, tmpDir)
 
 	if err == nil {
 		t.Log(testPath)
