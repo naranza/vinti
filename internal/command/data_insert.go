@@ -8,7 +8,7 @@ import (
 	"vinti/internal/core"
 )
 
-func InsertData(config *core.Config, dir string, data string) (string, error) {
+func DataInsert(config *core.Config, dir string, data string) (string, error) {
 
 	baseName := Datetime(time.Now())
 	
