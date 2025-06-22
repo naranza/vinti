@@ -11,48 +11,13 @@ import (
 	"vinti/internal/command"
 )
 
-// type ApiRequest struct {
-// 	Cmd          string `json:"cmd"`
-// 	Folder       string `json:"folder,omitempty"`
-// 	File         string `json:"file,omitempty"`
-// 	Data         string `json:"data,omitempty"`
-// 	GrantType    string `json:"grant_type,omitempty"`
-// 	ClientID     string `json:"client_id,omitempty"`
-// 	ClientSecret string `json:"client_secret,omitempty"`
-// 	Scope        string `json:"scope,omitempty"`
-// }
-
-// // Standard Response
-// type ApiResponse struct {
-//   Code  int      `json:"code"`           // e.g. "ok", "error", "invalid_token", etc.
-//   Message string      `json:"message"`          // description or content
-//   Files   []string    `json:"files,omitempty"`  // used for 'all' command
-//   O2      *O2tResponse `json:"o2,omitempty"`    // used for oauth token response
-// }
-
-// // OAuth2 Token Response payload
-// type O2tResponse struct {
-//   AccessToken string `json:"access_token"`
-//   TokenType   string `json:"token_type"`
-//   ExpiresIn   int    `json:"expires_in"`
-//   Scope       string `json:"scope"`
-// }
-
-// type TokenData struct {
-// 	ClientID string    `json:"client_id"`
-// 	Expire   time.Time `json:"expire"`
-// }
-
 var allowedCommands = map[string]bool{
-  "add": true,
-  "get": true,
-  "arc": true,
-  "del": true,
-  "sto": true,
-  "all": true,
-  "o2t": true,
-  "mkd": true,
-  "ddi": true,
+  "fo-lst": true, 
+  "fi-get": true, "fi-set": true, "fi-del": true, "fi-arc": true, "fi-lst": true, 
+  "da-ins": true,
+  "di-ins": true, "di-del": true,
+  "ci-get": true, "ci-set": true, "ci-del": true, "ci-arc": true, "ci-una": true,
+  "to-req": true,
 }
 
 func writeHttpResponse(w http.ResponseWriter, response core.ApiResponse) {
@@ -83,19 +48,19 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   }
 
   switch request.Cmd {
-  case "add":
-    filename, err := command.Add(config, request.Folder, request.Data)
+  case "da-ins":
+    filename, err := command.DataInsert(config, request.Folder, request.Data)
     if err != nil {
       response.Code = http.StatusInternalServerError
       response.Message = "Failed to add data"
     } else {
       response.Code = http.StatusOK
       response.Message = filename
-      log.Printf("[add] folder=%q filename=%q", request.Folder, filename)
+      log.Printf("[ida] folder=%q filename=%q", request.Folder, filename)
     }
     
-  case "get":
-    result, err := command.Get(config, request.Folder, request.File)
+  case "fi-get":
+    result, err := command.FileRead(config, request.Folder, request.File)
 		if err != nil {
 			response.Code = http.StatusInternalServerError
 			response.Message = "Cannot create folder"
@@ -104,8 +69,8 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       response.Code = http.StatusOK
       response.Message = result
     }
-  case "del":
-    err := command.Del(config, request.Folder, request.File)
+  case "fi-del":
+    err := command.FileDelete(config, request.Folder, request.File)
 	  if err != nil {
   		if os.IsNotExist(err) {
   			response.Code = http.StatusNotFound
@@ -119,10 +84,10 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   		response.Code = http.StatusOK
   		response.Message = "done"
     }
-  case "arc":
+  case "fi-arc":
     // to do
-  case "sto":
-    err := command.Sto(config, request.Folder, request.File, request.Data) 
+  case "fi-set":
+    err := command.FileWrite(config, request.Folder, request.File, request.Data) 
     if err != nil {
       response.Code = http.StatusInternalServerError
       response.Message = "Failed to sto data"
@@ -131,8 +96,8 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       response.Message = "done"
       log.Printf("[sto] folder=%q filename=%q", request.Folder, request.File)
     }
-  case "all":
-    files, err := command.All(config, request.Folder)
+  case "fi-lst":
+    files, err := command.FileList(config, request.Folder)
   	if err != nil {
   		response.Code = http.StatusInternalServerError
   		response.Message = "Failed to list files"
@@ -142,8 +107,8 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   		response.Message = "done"
   		log.Printf("[all] folder=%q numfiles=%d", request.Folder, len(files))
   	}
-  case "mkd":
-  	err := command.MakeDir(config, request.Folder)
+  case "di-ins":
+  	err := command.FolderInsert(config, request.Folder)
 		if err != nil {
 			response.Code = http.StatusInternalServerError
 			response.Message = "Cannot create folder"
@@ -152,24 +117,32 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   		response.Code = http.StatusOK
   		response.Message = "done"
 		}
-  case "ddi":
-    // // Example for "all": return some dummy file list
-    // if req.Cmd == "all" {
-    //   resp := Response{
-    //     Status:  "ok",
-    //     Message: "",
-    //     Files:   []string{"file1.txt", "file2.txt", "file3.txt"},
-    //   }
-    //   writeJSON(w, resp)
-    //   return
-    // }
+  case "ci-set":
+    if request.ClientID == "" || request.ClientSecret == "" || request.Scope == "" {
+      response.Code = http.StatusBadRequest
+      response.Message = "Missing fields for aci"
+      break
+    }
 
-    // writeOK(w, req.Cmd+" executed successfully")
-
- case "o2t":
+    client := map[string]string{
+      "client_id": request.ClientID,
+      "client_secret": request.ClientSecret,
+      "scope": request.Scope,
+    }
+    data, _ := json.Marshal(client)
+    err := command.FileWrite(config, "_client_id", request.ClientID, string(data))
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Failed to store client"
+    } else {
+      response.Code = http.StatusOK
+      response.Message = "done"
+      log.Printf("[aci] stored client_id=%q", request.ClientID)
+    }
+ case "to-req":
     // Validate client_id/client_secret here if needed
 
-    accessToken, err := command.O2t(config, request.ClientID)
+    accessToken, err := command.TokenRequest(config, request.ClientID)
     if err != nil {
       response.Code = http.StatusInternalServerError
       response.Message = "Failed to generate token"
@@ -181,7 +154,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   		response.ExpiresIn = config.TokenExpiresIn
   		response.Scope = "acbd"
       // If no error, response is already filled by O2t
-      log.Printf("[o2t] client_id=%q token=%q", request.ClientID, response.AccessToken)
+      log.Printf("[to-req] client_id=%q token=%q", request.ClientID, response.AccessToken)
     }
 
   default:
