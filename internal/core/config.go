@@ -34,7 +34,7 @@ func DefaultConfig() *Config {
 		TlsCertPath: "",
 		TlsKeyPath: "",
 		ServerPort: 20201,
-		TokenExpiresIn 3600,
+		TokenExpiresIn: 3600,
 	}
 }
 
