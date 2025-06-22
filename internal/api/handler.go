@@ -11,32 +11,37 @@ import (
 	"vinti/internal/command"
 )
 
-type ApiRequest struct {
-	Cmd          string `json:"cmd"`
-	Folder       string `json:"folder,omitempty"`
-	File         string `json:"file,omitempty"`
-	Data         string `json:"data,omitempty"`
-	GrantType    string `json:"grant_type,omitempty"`
-	ClientID     string `json:"client_id,omitempty"`
-	ClientSecret string `json:"client_secret,omitempty"`
-	Scope        string `json:"scope,omitempty"`
-}
+// type ApiRequest struct {
+// 	Cmd          string `json:"cmd"`
+// 	Folder       string `json:"folder,omitempty"`
+// 	File         string `json:"file,omitempty"`
+// 	Data         string `json:"data,omitempty"`
+// 	GrantType    string `json:"grant_type,omitempty"`
+// 	ClientID     string `json:"client_id,omitempty"`
+// 	ClientSecret string `json:"client_secret,omitempty"`
+// 	Scope        string `json:"scope,omitempty"`
+// }
 
-// Standard Response
-type ApiResponse struct {
-  Code  int      `json:"code"`           // e.g. "ok", "error", "invalid_token", etc.
-  Message string      `json:"message"`          // description or content
-  Files   []string    `json:"files,omitempty"`  // used for 'all' command
-  O2      *O2tResponse `json:"o2,omitempty"`    // used for oauth token response
-}
+// // Standard Response
+// type ApiResponse struct {
+//   Code  int      `json:"code"`           // e.g. "ok", "error", "invalid_token", etc.
+//   Message string      `json:"message"`          // description or content
+//   Files   []string    `json:"files,omitempty"`  // used for 'all' command
+//   O2      *O2tResponse `json:"o2,omitempty"`    // used for oauth token response
+// }
 
-// OAuth2 Token Response payload
-type O2tResponse struct {
-  AccessToken string `json:"access_token"`
-  TokenType   string `json:"token_type"`
-  ExpiresIn   int    `json:"expires_in"`
-  Scope       string `json:"scope"`
-}
+// // OAuth2 Token Response payload
+// type O2tResponse struct {
+//   AccessToken string `json:"access_token"`
+//   TokenType   string `json:"token_type"`
+//   ExpiresIn   int    `json:"expires_in"`
+//   Scope       string `json:"scope"`
+// }
+
+// type TokenData struct {
+// 	ClientID string    `json:"client_id"`
+// 	Expire   time.Time `json:"expire"`
+// }
 
 var allowedCommands = map[string]bool{
   "add": true,
@@ -50,7 +55,7 @@ var allowedCommands = map[string]bool{
   "ddi": true,
 }
 
-func writeHttpResponse(w http.ResponseWriter, response ApiResponse) {
+func writeHttpResponse(w http.ResponseWriter, response core.ApiResponse) {
   w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(response.Code)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -59,8 +64,8 @@ func writeHttpResponse(w http.ResponseWriter, response ApiResponse) {
 }
 
 func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
-  var request ApiRequest
-	var response ApiResponse
+  var request core.ApiRequest
+	var response core.ApiResponse
 	
   decoder := json.NewDecoder(r.Body)
   err := decoder.Decode(&request)
@@ -161,27 +166,23 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
 
     // writeOK(w, req.Cmd+" executed successfully")
 
-  case "o2t":
-    // var params O2tParams
-    // if err := json.Unmarshal(req.Params, &params); err != nil {
-    //   writeError(w, http.StatusBadRequest, "Invalid params for o2t")
-    //   return
-    // }
-    // // TODO: implement OAuth2 token logic here
-    // log.Printf("[o2t] client_id=%q scope=%q", params.ClientID, params.Scope)
+ case "o2t":
+    // Validate client_id/client_secret here if needed
 
-    // // Dummy token response example
-    // resp := Response{
-    //   Status:  "ok",
-    //   Message: "",
-    //   O2: &O2tResponse{
-    //     AccessToken: "dummy-access-token",
-    //     TokenType:   "Bearer",
-    //     ExpiresIn:   3600,
-    //     Scope:       params.Scope,
-    //   },
-    // }
-    // writeJSON(w, resp)
+    accessToken, err := command.O2t(config, request.ClientID)
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Failed to generate token"
+    } else {
+      response.Code = http.StatusOK
+  		response.Message = "done"
+      response.AccessToken = accessToken
+  		response.TokenType = "Bearer"
+  		response.ExpiresIn = config.TokenExpiresIn
+  		response.Scope = "acbd"
+      // If no error, response is already filled by O2t
+      log.Printf("[o2t] client_id=%q token=%q", request.ClientID, response.AccessToken)
+    }
 
   default:
     // writeError(w, http.StatusNotImplemented, "Command not implemented")
