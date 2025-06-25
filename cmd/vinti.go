@@ -16,16 +16,16 @@ var config string
 
 func main() {
   // Load config
-	absPath, err := filepath.Abs("config/config.cogo")
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-		os.Exit(1)
-	}
-	config, err := core.ConfigLoad(absPath)
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-		os.Exit(1)
-	}
+  absPath, err := filepath.Abs("config/config.cogo")
+  if err != nil {
+    log.Fatalf("Failed to load config: %v", err)
+    os.Exit(1)
+  }
+  config, err := core.ConfigLoad(absPath)
+  if err != nil {
+    log.Fatalf("Failed to load config: %v", err)
+    os.Exit(1)
+  }
 
   http.HandleFunc("/submit", func(w http.ResponseWriter, r *http.Request) {
     api.APIHandler(config, w, r)

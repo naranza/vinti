@@ -3,61 +3,61 @@
 package command
 
 import (
-	"os"
-	"path/filepath"
-	"testing"
-	"vinti/internal/core"
+  "os"
+  "path/filepath"
+  "testing"
+  "vinti/internal/core"
 )
 
 func TestFileList_Success(t *testing.T) {
-	config := core.DefaultConfig()
-	dir := "FileListSuccess"
-	testPath := filepath.Join(config.Dir, dir)
-	os.RemoveAll(testPath)
+  config := core.DefaultConfig()
+  dir := "FileListSuccess"
+  testPath := filepath.Join(config.Dir, dir)
+  os.RemoveAll(testPath)
 
-	// Create test directory and files
-	if err := os.MkdirAll(testPath, config.FileModeDir); err != nil {
-		t.Fatalf("Failed to create test directory: %v", err)
-	}
-	filesToCreate := []string{"file1.txt", "file2.txt", "file3.txt"}
-	for _, f := range filesToCreate {
-		fullPath := filepath.Join(testPath, f)
-		if err := os.WriteFile(fullPath, []byte("content"), config.FileModeFile); err != nil {
-			t.Fatalf("Failed to create test file %s: %v", f, err)
-		}
-	}
+  // Create test directory and files
+  if err := os.MkdirAll(testPath, config.FileModeDir); err != nil {
+    t.Fatalf("Failed to create test directory: %v", err)
+  }
+  filesToCreate := []string{"file1.txt", "file2.txt", "file3.txt"}
+  for _, f := range filesToCreate {
+    fullPath := filepath.Join(testPath, f)
+    if err := os.WriteFile(fullPath, []byte("content"), config.FileModeFile); err != nil {
+      t.Fatalf("Failed to create test file %s: %v", f, err)
+    }
+  }
 
-	files, err := FileList(config, dir)
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
+  files, err := FileList(config, dir)
+  if err != nil {
+    t.Fatalf("Expected no error, got %v", err)
+  }
 
-	// Check if returned files match what was created
-	if len(files) != len(filesToCreate) {
-		t.Errorf("Expected %d files, got %d", len(filesToCreate), len(files))
-	}
+  // Check if returned files match what was created
+  if len(files) != len(filesToCreate) {
+    t.Errorf("Expected %d files, got %d", len(filesToCreate), len(files))
+  }
 
-	fileSet := make(map[string]bool)
-	for _, f := range files {
-		fileSet[f] = true
-	}
-	for _, f := range filesToCreate {
-		if !fileSet[f] {
-			t.Errorf("Expected file %q to be listed but it was not", f)
-		}
-	}
+  fileSet := make(map[string]bool)
+  for _, f := range files {
+    fileSet[f] = true
+  }
+  for _, f := range filesToCreate {
+    if !fileSet[f] {
+      t.Errorf("Expected file %q to be listed but it was not", f)
+    }
+  }
 }
 
 func TestFileList_Fail(t *testing.T) {
-	config := core.DefaultConfig()
-	dir := "FileListFail"
-	testPath := filepath.Join(config.Dir, dir)
-	os.RemoveAll(testPath)
+  config := core.DefaultConfig()
+  dir := "FileListFail"
+  testPath := filepath.Join(config.Dir, dir)
+  os.RemoveAll(testPath)
 
-	// Don't create directory, so it doesn't exist
+  // Don't create directory, so it doesn't exist
 
-	_, err := FileList(config, dir)
-	if err == nil {
-		t.Fatal("Expected error when listing files from non-existent directory, got nil")
-	}
+  _, err := FileList(config, dir)
+  if err == nil {
+    t.Fatal("Expected error when listing files from non-existent directory, got nil")
+  }
 }

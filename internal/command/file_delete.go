@@ -3,14 +3,14 @@
 package command
 
 import (
-	"os"
-	"path/filepath"
-	"vinti/internal/core"
+  "os"
+  "path/filepath"
+  "vinti/internal/core"
 )
 
 func FileDelete(config *core.Config, dir string, filename string) error {
-	fullPath := filepath.Join(config.Dir, dir, filename)
+  fullPath := filepath.Join(config.Dir, dir, filename)
 
-	return  os.Remove(fullPath)
+  return  os.Remove(fullPath)
 }
 

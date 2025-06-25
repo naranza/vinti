@@ -7,8 +7,8 @@ import (
   "encoding/json"
   "log"
   "net/http"
-	"vinti/internal/core"
-	"vinti/internal/command"
+  "vinti/internal/core"
+  "vinti/internal/command"
 )
 
 var allowedCommands = map[string]bool{
@@ -22,27 +22,27 @@ var allowedCommands = map[string]bool{
 
 func writeHttpResponse(w http.ResponseWriter, response core.ApiResponse) {
   w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.Code)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Failed to write JSON response: %v", err)
-	}
+  w.WriteHeader(response.Code)
+  if err := json.NewEncoder(w).Encode(response); err != nil {
+    log.Printf("Failed to write JSON response: %v", err)
+  }
 }
 
 func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   var request core.ApiRequest
-	var response core.ApiResponse
-	
+  var response core.ApiResponse
+  
   decoder := json.NewDecoder(r.Body)
   err := decoder.Decode(&request)
   if err != nil {
-  	response.Code = http.StatusBadRequest
-		response.Message = "Invalid params"
+    response.Code = http.StatusBadRequest
+    response.Message = "Invalid params"
     writeHttpResponse(w, response)
     return
   }
   if !allowedCommands[request.Cmd] {
     response.Code = http.StatusBadRequest
-		response.Message = "Invalid command"
+    response.Message = "Invalid command"
     writeHttpResponse(w, response)
     return
   }
@@ -61,28 +61,28 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
     
   case "fi-get":
     result, err := command.FileRead(config, request.Folder, request.File)
-		if err != nil {
-			response.Code = http.StatusInternalServerError
-			response.Message = "Cannot create folder"
-  	} else {
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Cannot create folder"
+    } else {
       log.Printf("[mkd] folder=%q", request.Folder)
       response.Code = http.StatusOK
       response.Message = result
     }
   case "fi-del":
     err := command.FileDelete(config, request.Folder, request.File)
-	  if err != nil {
-  		if os.IsNotExist(err) {
-  			response.Code = http.StatusNotFound
-  			response.Message = "File not found"
-  		} else {
-  			response.Code = http.StatusInternalServerError
-  			response.Message = "Failed to delete file"
-  		}
-  	} else {
-  		log.Printf("[del] folder=%q file=%q", request.Folder, request.File)
-  		response.Code = http.StatusOK
-  		response.Message = "done"
+    if err != nil {
+      if os.IsNotExist(err) {
+        response.Code = http.StatusNotFound
+        response.Message = "File not found"
+      } else {
+        response.Code = http.StatusInternalServerError
+        response.Message = "Failed to delete file"
+      }
+    } else {
+      log.Printf("[del] folder=%q file=%q", request.Folder, request.File)
+      response.Code = http.StatusOK
+      response.Message = "done"
     }
   case "fi-arc":
     // to do
@@ -98,25 +98,25 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
     }
   case "fi-lst":
     files, err := command.FileList(config, request.Folder)
-  	if err != nil {
-  		response.Code = http.StatusInternalServerError
-  		response.Message = "Failed to list files"
-  	} else {
-  		response.Code = http.StatusOK
-  		response.Files = files
-  		response.Message = "done"
-  		log.Printf("[all] folder=%q numfiles=%d", request.Folder, len(files))
-  	}
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Failed to list files"
+    } else {
+      response.Code = http.StatusOK
+      response.Files = files
+      response.Message = "done"
+      log.Printf("[all] folder=%q numfiles=%d", request.Folder, len(files))
+    }
   case "di-ins":
-  	err := command.FolderInsert(config, request.Folder)
-		if err != nil {
-			response.Code = http.StatusInternalServerError
-			response.Message = "Cannot create folder"
-		} else {
-  		log.Printf("[mkd] folder=%q", request.Folder)
-  		response.Code = http.StatusOK
-  		response.Message = "done"
-		}
+    err := command.FolderInsert(config, request.Folder)
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Cannot create folder"
+    } else {
+      log.Printf("[mkd] folder=%q", request.Folder)
+      response.Code = http.StatusOK
+      response.Message = "done"
+    }
   case "ci-set":
     if request.ClientID == "" || request.ClientSecret == "" || request.Role == "" {
       response.Code = http.StatusBadRequest
@@ -139,22 +139,22 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       response.Message = "done"
       log.Printf("[aci] stored client_id=%q", request.ClientID)
     }
- case "to-req":
-    // token-request
+//  case "to-req":
+//     // token-request
 
-    accessToken, err := command.TokenRequest(config, request.ClientID)
-    if err != nil {
-      response.Code = http.StatusInternalServerError
-      response.Message = "Failed to generate token"
-    } else {
-      response.Code = http.StatusOK
-  		response.Message = "done"
-      response.AccessToken = accessToken
-  		response.TokenType = "Bearer"
-  		response.ExpiresIn = config.TokenExpiresIn
-      // If no error, response is already filled by O2t
-      log.Printf("[to-req] client_id=%q token=%q", request.ClientID, response.AccessToken)
-    }
+//     accessToken, err := command.TokenRequest(config, request.ClientID)
+//     if err != nil {
+//       response.Code = http.StatusInternalServerError
+//       response.Message = "Failed to generate token"
+//     } else {
+//       response.Code = http.StatusOK
+//       response.Message = "done"
+//       response.AccessToken = accessToken
+//       response.TokenType = "Bearer"
+//       response.ExpiresIn = config.TokenExpiresIn
+//       // If no error, response is already filled by O2t
+//       log.Printf("[to-req] client_id=%q token=%q", request.ClientID, response.AccessToken)
+//     }
 
   default:
     // writeError(w, http.StatusNotImplemented, "Command not implemented")
@@ -162,9 +162,9 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   writeHttpResponse(w, response)
   
 
-	// w.Header().Set("Content-Type", "application/json")
-	// w.WriteHeader(statusCode)
-	// if err := json.NewEncoder(w).Encode(response); err != nil {
-	// 	log.Printf("Failed to write JSON response: %v", err)
-	// }
+  // w.Header().Set("Content-Type", "application/json")
+  // w.WriteHeader(statusCode)
+  // if err := json.NewEncoder(w).Encode(response); err != nil {
+  //   log.Printf("Failed to write JSON response: %v", err)
+  // }
 }
