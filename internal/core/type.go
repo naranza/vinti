@@ -30,7 +30,7 @@ type TokenData struct {
 }
 
 type ClientInfo struct {
-	ClientID     string `json:"client_id"`
+	Username     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 	Role        string `json:"scope"`
 }
