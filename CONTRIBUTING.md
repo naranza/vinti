@@ -75,8 +75,6 @@ Before submitting a new issue:
 * Include clear steps to reproduce if it's a bug
 * Be descriptive and specific
 
-## References
-[A Note About Git Commit Messages](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
 # Thank You
 
 We appreciate your effort and enthusiasm.
