@@ -17,7 +17,7 @@ type ApiResponse struct {
 }
 
 type ApiUser struct {
-  Username string `json:"client_id"`
-  Password string `json:"client_secret"`
-  Role string `json:"scope"`
+  Username string `json:"username"`
+  Password string `json:"password"`
+  Role string `json:"role"`
 }

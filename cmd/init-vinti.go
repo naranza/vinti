@@ -15,12 +15,12 @@ import (
 
 func main() {
   if len(os.Args) < 3 {
-    fmt.Println("Usage:\n  init-vinti <cmd> <subject>")
+    fmt.Println("Usage:\n  init-vinti <subject> <data>")
     os.Exit(1)
   }
 
-  cmd := os.Args[1]
-  subject := os.Args[2]
+  subject := os.Args[1]
+  data := os.Args[2]
   
   // Load config
   absPath, err := filepath.Abs("config/config.cogo")
@@ -34,12 +34,12 @@ func main() {
     os.Exit(1)
   }
   
-  switch cmd {
+  switch subject {
   case "folder":
     // init folder
-    err := command.FolderInsert(config, subject); 
+    err := command.FolderInsert(config, data); 
     if err != nil {
-      fmt.Println("Failed to create folder %q: %v", subject, err)
+      fmt.Println("Failed to create folder %q: %v", data, err)
     } else {
       fmt.Println("Folders initialized")
     }
@@ -48,7 +48,7 @@ func main() {
   case "user":
     // init client_id
     var client core.ApiUser
-    err := cogo.LoadConfig(subject, &client)
+    err := cogo.LoadConfig(data, &client)
     if (err != nil) {
       fmt.Println("Error reading client file")
       os.Exit(1)
@@ -58,14 +58,14 @@ func main() {
       log.Printf("Skipping client %q: failed to marshal: %v", client.Username, err)
       return
     }
-    err = command.FileWrite(config, "_client_id",  client.Username, string(data))
+    err = command.FileWrite(config, "_user",  client.Username, string(data))
     if  err != nil {
       log.Printf("Failed to write client %q: %v", client.Username, err)
     } else {
       fmt.Printf("✓ Created client_id: %s\n", client.Username)
     }
   default:
-    fmt.Println("Unknown command: %s. Expected 'folder' or 'user'", cmd)
+    fmt.Println("Unknown command: %s. Expected 'folder' or 'user'", subject)
   }
 }
 

@@ -9,6 +9,7 @@ import (
   "net/http"
   "vinti/internal/core"
   "vinti/internal/command"
+  "github.com/naranza/bagolo"
 )
 
 var allowedCommands = map[string]bool{
@@ -31,9 +32,50 @@ func writeHttpResponse(w http.ResponseWriter, response core.ApiResponse) {
 func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   var request core.ApiRequest
   var response core.ApiResponse
-  
+  var user core.ApiUser
+
+  username, password, err := bagolo.Auth(r)
+  if err != nil {
+    response.Code = http.StatusBadRequest
+    response.Message = err.Error()
+    writeHttpResponse(w, response)
+    return
+  }
+  // validate the crendentials
+
+  userData, err := command.FileRead(config, "_user", username)
+  log.Printf("%v\n", userData);
+  if err != nil {
+    response.Code = http.StatusInternalServerError
+    response.Message = "User error"
+    writeHttpResponse(w, response)
+    return
+  }
+  err = json.Unmarshal([]byte(userData), &user)
+  if err != nil {
+    response.Code = http.StatusInternalServerError
+    response.Message = "User decode error"
+    writeHttpResponse(w, response)
+    return
+  }
+  if username == "" || password == "" {
+    response.Code = http.StatusUnauthorized
+    response.Message = "Invalid credential"
+    writeHttpResponse(w, response)
+    return
+  }
+  if username != user.Username || password != user.Password {
+    response.Code = http.StatusUnauthorized
+    response.Message = "Invalid credential"
+    writeHttpResponse(w, response)
+    return
+  }
+  _ = password
+
+
+
   decoder := json.NewDecoder(r.Body)
-  err := decoder.Decode(&request)
+  err = decoder.Decode(&request)
   if err != nil {
     response.Code = http.StatusBadRequest
     response.Message = "Invalid params"
@@ -117,28 +159,28 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       response.Code = http.StatusOK
       response.Message = "done"
     }
-  case "ci-set":
-    if request.ClientID == "" || request.ClientSecret == "" || request.Role == "" {
-      response.Code = http.StatusBadRequest
-      response.Message = "Missing fields for aci"
-      break
-    }
+  // case "ci-set":
+  //   if request.ClientID == "" || request.ClientSecret == "" || request.Role == "" {
+  //     response.Code = http.StatusBadRequest
+  //     response.Message = "Missing fields for aci"
+  //     break
+  //   }
 
-    client := map[string]string{
-      "client_id": request.ClientID,
-      "client_secret": request.ClientSecret,
-      "Role": request.Role,
-    }
-    data, _ := json.Marshal(client)
-    err := command.FileWrite(config, "_client_id", request.ClientID, string(data))
-    if err != nil {
-      response.Code = http.StatusInternalServerError
-      response.Message = "Failed to store client"
-    } else {
-      response.Code = http.StatusOK
-      response.Message = "done"
-      log.Printf("[aci] stored client_id=%q", request.ClientID)
-    }
+  //   client := map[string]string{
+  //     "client_id": request.ClientID,
+  //     "client_secret": request.ClientSecret,
+  //     "Role": request.Role,
+  //   }
+  //   data, _ := json.Marshal(client)
+  //   err := command.FileWrite(config, "_client_id", request.ClientID, string(data))
+  //   if err != nil {
+  //     response.Code = http.StatusInternalServerError
+  //     response.Message = "Failed to store client"
+  //   } else {
+  //     response.Code = http.StatusOK
+  //     response.Message = "done"
+  //     log.Printf("[aci] stored client_id=%q", request.ClientID)
+  //   }
 //  case "to-req":
 //     // token-request
 
