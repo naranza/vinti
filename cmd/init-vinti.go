@@ -47,7 +47,7 @@ func main() {
     
   case "user":
     // init client_id
-    var client core.ClientInfo
+    var client core.ApiUser
     err := cogo.LoadConfig(subject, &client)
     if (err != nil) {
       fmt.Println("Error reading client file")
