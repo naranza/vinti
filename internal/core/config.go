@@ -20,7 +20,6 @@ type Config struct {
   TlsCertPath string
   TlsKeyPath string
   ServerPort int
-  TokenExpiresIn int
   LogThreshold int
 }
 
