@@ -13,10 +13,9 @@ import (
 )
 
 var allowedCommands = map[string]bool{
-  "fo-lst": true, 
-  "fi-get": true, "fi-set": true, "fi-del": true, "fi-arc": true, "fi-lst": true, 
+  "fi-get": true, "fi-set": true, "fi-del": true, "fi-ren": true, "fi-lst": true, 
   "da-ins": true,
-  "di-ins": true, "di-del": true,
+  "fo-ins": true,
   "ci-get": true, "ci-set": true, "ci-del": true, "ci-arc": true, "ci-una": true,
   "to-req": true,
 }
@@ -38,58 +37,76 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   if err != nil {
     response.Code = http.StatusBadRequest
     response.Message = err.Error()
+    log.Printf("%d %q %q", "vinti", response.Code, response.Message)
     writeHttpResponse(w, response)
     return
   }
+  
   // validate the crendentials
-
+  if username == "" || password == "" {
+    response.Code = http.StatusUnauthorized
+    response.Message = "Invalid credential"
+    log.Printf("%d %q %q", "vinti", response.Code, response.Message)
+    writeHttpResponse(w, response)
+    return
+  }
+  
   userData, err := command.FileRead(config, "_user", username)
-  log.Printf("%v\n", userData);
   if err != nil {
     response.Code = http.StatusInternalServerError
     response.Message = "User error"
+    log.Printf("%d %q %q", "vinti", response.Code, response.Message)
     writeHttpResponse(w, response)
     return
   }
+  
   err = json.Unmarshal([]byte(userData), &user)
   if err != nil {
     response.Code = http.StatusInternalServerError
     response.Message = "User decode error"
+    log.Printf("%d %q %q", "vinti", response.Code, response.Message)
     writeHttpResponse(w, response)
     return
   }
-  if username == "" || password == "" {
-    response.Code = http.StatusUnauthorized
-    response.Message = "Invalid credential"
-    writeHttpResponse(w, response)
-    return
-  }
+  
   if username != user.Username || password != user.Password {
     response.Code = http.StatusUnauthorized
     response.Message = "Invalid credential"
+    log.Printf("%d %q %q", "vinti", response.Code, response.Message)
     writeHttpResponse(w, response)
     return
   }
-  _ = password
-
-
-
+  
   decoder := json.NewDecoder(r.Body)
   err = decoder.Decode(&request)
   if err != nil {
     response.Code = http.StatusBadRequest
-    response.Message = "Invalid params"
+    response.Message = "Invalid request"
+    log.Printf("%d %q %q", "vinti", response.Code, response.Message)
     writeHttpResponse(w, response)
     return
   }
   if !allowedCommands[request.Cmd] {
     response.Code = http.StatusBadRequest
     response.Message = "Invalid command"
+    log.Printf("%d %q %q", "vinti", response.Code, response.Message)
     writeHttpResponse(w, response)
     return
   }
+  log.Println(request)
 
   switch request.Cmd {
+  case "fo-ins":
+    err := command.FolderInsert(config, request.Folder)
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Cannot create folder"
+    } else {
+      response.Code = http.StatusOK
+      response.Message = "done"
+      log.Printf("%d %s %s %s", response.Code, user.Username, request.Cmd, request.Folder)
+    }
+
   case "da-ins":
     filename, err := command.DataInsert(config, request.Folder, request.Data)
     if err != nil {
@@ -98,7 +115,7 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
     } else {
       response.Code = http.StatusOK
       response.Message = filename
-      log.Printf("[ida] folder=%q filename=%q", request.Folder, filename)
+      log.Printf("%d %s %s %s %s", response.Code, user.Username, request.Cmd, request.Folder, filename)
     }
     
   case "fi-get":
@@ -107,9 +124,9 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
       response.Code = http.StatusInternalServerError
       response.Message = "Cannot create folder"
     } else {
-      log.Printf("[mkd] folder=%q", request.Folder)
       response.Code = http.StatusOK
       response.Message = result
+      log.Printf("%d %s %s %s", response.Code, user.Username, request.Cmd, request.Folder)
     }
   case "fi-del":
     err := command.FileDelete(config, request.Folder, request.File)
@@ -121,43 +138,45 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
         response.Code = http.StatusInternalServerError
         response.Message = "Failed to delete file"
       }
+      log.Printf("%d %s %s %s", response.Code, user.Username, request.Cmd, response.Message)
+      } else {
+        response.Code = http.StatusOK
+        response.Message = "done"
+        log.Printf("%d %s %s %s", response.Code, user.Username, request.Cmd, request.File)
+      }
+  case "fi-ren":
+    err := command.FileRename(config, request.Folder, request.File, request.To) 
+    if err != nil {
+      response.Code = http.StatusInternalServerError
+      response.Message = "Failed to rename file"
+      log.Printf("%d %s %s %s", response.Code, user.Username, request.Cmd, err.Error())
     } else {
-      log.Printf("[del] folder=%q file=%q", request.Folder, request.File)
       response.Code = http.StatusOK
       response.Message = "done"
+      log.Printf("%d %s %s %s %s", response.Code, user.Username, request.Cmd, request.Folder, request.To)
     }
-  case "fi-arc":
-    // to do
   case "fi-set":
     err := command.FileWrite(config, request.Folder, request.File, request.Data) 
     if err != nil {
       response.Code = http.StatusInternalServerError
-      response.Message = "Failed to sto data"
+      response.Message = "Failed to store data"
+      log.Printf("%d %s %s %s", response.Code, user.Username, request.Cmd, response.Message)
     } else {
       response.Code = http.StatusOK
       response.Message = "done"
-      log.Printf("[sto] folder=%q filename=%q", request.Folder, request.File)
+      log.Printf("%d %s %s %s", response.Code, user.Username, request.Cmd, request.File)
     }
   case "fi-lst":
     files, err := command.FileList(config, request.Folder)
     if err != nil {
       response.Code = http.StatusInternalServerError
       response.Message = "Failed to list files"
+      log.Printf("%d %s %s %s", response.Code, user.Username, request.Cmd, response.Message)
     } else {
       response.Code = http.StatusOK
       response.Files = files
       response.Message = "done"
-      log.Printf("[all] folder=%q numfiles=%d", request.Folder, len(files))
-    }
-  case "di-ins":
-    err := command.FolderInsert(config, request.Folder)
-    if err != nil {
-      response.Code = http.StatusInternalServerError
-      response.Message = "Cannot create folder"
-    } else {
-      log.Printf("[mkd] folder=%q", request.Folder)
-      response.Code = http.StatusOK
-      response.Message = "done"
+      log.Printf("%d %s %s %d", response.Code, user.Username, request.Cmd, len(files))
     }
   // case "ci-set":
   //   if request.ClientID == "" || request.ClientSecret == "" || request.Role == "" {

@@ -6,6 +6,7 @@ type ApiRequest struct {
   Cmd string `json:"cmd"`
   Folder string `json:"folder,omitempty"`
   File string `json:"file,omitempty"`
+  To string `json:"to,omitempty"`
   Data string `json:"data,omitempty"`
   Role string `json:"scope,omitempty"`
 }
