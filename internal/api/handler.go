@@ -38,6 +38,7 @@ func LogAndSendResponse(
   writeHttpResponse(w, response)
 }
 
+
 func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   var request core.ApiRequest
   var response core.ApiResponse
@@ -102,85 +103,128 @@ func APIHandler(config *core.Config, w http.ResponseWriter, r *http.Request) {
   // command handling
   switch request.Cmd {
   case "fo-ins":
-    err := command.FolderInsert(config, request.Folder)
-    if err != nil {
-      response.Code = http.StatusInternalServerError
-      response.Message = "Cannot create folder"
+    if !ValidateFolder(request.Folder) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid folder name"
     } else {
-      response.Code = http.StatusOK
-      response.Message = "done"
+      err := command.FolderInsert(config, request.Folder)
+      if err != nil {
+        response.Code = http.StatusInternalServerError
+        response.Message = "Cannot create folder"
+      } else {
+        response.Code = http.StatusOK
+        response.Message = "done"
+      }
     }
     logMessage = fmt.Sprintf("%s %s", request.Cmd, request.Folder)
   case "da-ins":
-    filename, err := command.DataInsert(config, request.Folder, request.Data)
-    if err != nil {
-      response.Code = http.StatusInternalServerError
-      response.Message = "Failed to add data"
+    if !ValidateFolder(request.Folder) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid folder name"
+      logMessage = fmt.Sprintf("%s %s", request.Cmd, request.Folder)
     } else {
-      response.Code = http.StatusOK
-      response.Message = filename
+      filename, err := command.DataInsert(config, request.Folder, request.Data)
+      if err != nil {
+        response.Code = http.StatusInternalServerError
+        response.Message = "Failed to add data"
+      } else {
+        response.Code = http.StatusOK
+        response.Message = filename
+      }
+      logMessage = fmt.Sprintf("%s %s %s", request.Cmd, request.Folder, filename)
     }
-    logMessage = fmt.Sprintf("%s %s %s", request.Cmd, request.Folder, filename)
   case "fi-get":
-    result, err := command.FileRead(config, request.Folder, request.File)
-    if err != nil {
-      response.Code = http.StatusInternalServerError
-      response.Message = "Cannot read file"
+    if !ValidateFolder(request.Folder) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid folder name"
     } else {
-      response.Code = http.StatusOK
-      response.Message = result
+      result, err := command.FileRead(config, request.Folder, request.File)
+      if err != nil {
+        response.Code = http.StatusInternalServerError
+        response.Message = "Cannot read file"
+      } else {
+        response.Code = http.StatusOK
+        response.Message = result
+      }
     }
     logMessage = fmt.Sprintf("%s %s %s", request.Cmd, request.Folder, request.File)
   case "fi-del":
-    err := command.FileDelete(config, request.Folder, request.File)
-    if err != nil {
-      if os.IsNotExist(err) {
-        response.Code = http.StatusNotFound
-        response.Message = "File not found"
-      } else {
-        response.Code = http.StatusInternalServerError
-        response.Message = "Failed to delete file"
-      }
-      logMessage = response.Message
+    if !ValidateFolder(request.Folder) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid folder name"
     } else {
-      response.Code = http.StatusOK
-      response.Message = "done"
+      err := command.FileDelete(config, request.Folder, request.File)
+      if err != nil {
+        if os.IsNotExist(err) {
+          response.Code = http.StatusNotFound
+          response.Message = "File not found"
+        } else {
+          response.Code = http.StatusInternalServerError
+          response.Message = "Failed to delete file"
+        }
+        logMessage = response.Message
+      } else {
+        response.Code = http.StatusOK
+        response.Message = "done"
+      }
     }
     logMessage = fmt.Sprintf("%s %s", request.Cmd, request.File)
   case "fi-ren":
-    err := command.FileRename(config, request.Folder, request.File, request.To) 
-    if err != nil {
-    response.Code = http.StatusInternalServerError
-    response.Message = "Failed to rename file"
+    if !ValidateFolder(request.Folder) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid folder name"
+    } else if !ValidateFolder(request.To) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid folder name"
     } else {
-      response.Code = http.StatusOK
-      response.Message = "done"
+      err := command.FileRename(config, request.Folder, request.File, request.To) 
+      if err != nil {
+        response.Code = http.StatusInternalServerError
+        response.Message = "Failed to rename file"
+      } else { 
+        response.Code = http.StatusOK
+        response.Message = "done"
+      }
     }
     logMessage = fmt.Sprintf("%s %s %s %s", request.Cmd, request.Folder, request.File, request.To)
   case "fi-set":
-    err := command.FileWrite(config, request.Folder, request.File, request.Data) 
-    if err != nil {
-    response.Code = http.StatusInternalServerError
-    response.Message = "Failed to store data"
+    if !ValidateFolder(request.Folder) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid folder name"
+    } else if !ValidateFile(request.File) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid file name"
     } else {
-      response.Code = http.StatusOK
-      response.Message = "done"
+      err := command.FileWrite(config, request.Folder, request.File, request.Data) 
+      if err != nil {
+        response.Code = http.StatusInternalServerError
+        response.Message = "Failed to store data"
+      } else {
+        response.Code = http.StatusOK
+        response.Message = "done"
+      }
     }
     logMessage = fmt.Sprintf("%s %s %s", request.Cmd, request.Folder, request.File)
   case "fi-lst":
-    files, err := command.FileList(config, request.Folder)
-    if err != nil {
-      response.Code = http.StatusInternalServerError
-      response.Message = "Failed to list files"
+    if !ValidateFolder(request.Folder) {
+      response.Code = http.StatusBadRequest
+      response.Message = "Invalid folder name"
     } else {
-      response.Code = http.StatusOK
-      response.Files = files
-      response.Message = "done"
+      files, err := command.FileList(config, request.Folder)
+      if err != nil {
+        response.Code = http.StatusInternalServerError
+        response.Message = "Failed to list files"
+      } else {
+        response.Code = http.StatusOK
+        response.Files = files
+        response.Message = "done"
+      }
     }
     logMessage = fmt.Sprintf("%s %s %d", request.Cmd, request.Folder, len(response.Files))
   default:
     response.Code = http.StatusInternalServerError
     response.Message = "Developers left something behind"
+    logMessage = fmt.Sprintf("%s", request.Cmd)
   }
   LogAndSendResponse(w, response, user, logLevel, logMessage)
 }

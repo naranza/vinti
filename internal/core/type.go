@@ -2,6 +2,8 @@
 
 package core
 
+const Version = "1.2025.1"
+
 type ApiRequest struct {
   Cmd string `json:"cmd"`
   Folder string `json:"folder,omitempty"`

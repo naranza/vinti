@@ -35,10 +35,10 @@ func main() {
 
   addr := fmt.Sprintf(":%d", config.ServerPort)
   if config.TlsCertPath != "" && config.TlsKeyPath != "" {
-    vlog.Log(vlog.INFO, "Starting SSL Vinti server on port %d", config.ServerPort)
+    vlog.Log(vlog.INFO, "Starting SSL Vinti server %s on port %d", core.Version, config.ServerPort)
     err = http.ListenAndServeTLS(addr, config.TlsCertPath, config.TlsKeyPath, nil)
   } else {
-    vlog.Log(vlog.INFO, "Starting Vinti server on port %d", config.ServerPort)
+    vlog.Log(vlog.INFO, "Starting Vinti server %s on port %d", core.Version, config.ServerPort)
     err = http.ListenAndServe(addr, nil)
   }
 
