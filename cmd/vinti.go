@@ -6,10 +6,11 @@ import (
     "fmt"
     "log"
     "net/http"
-    "os"
+    // "os"
     "path/filepath"
     "vinti/internal/core"
     "vinti/internal/api"
+    vlog "vinti/internal/log"
 )
 
 var config string
@@ -19,24 +20,25 @@ func main() {
   absPath, err := filepath.Abs("config/config.cogo")
   if err != nil {
     log.Fatalf("Failed to load config: %v", err)
-    os.Exit(1)
   }
   config, err := core.ConfigLoad(absPath)
   if err != nil {
     log.Fatalf("Failed to load config: %v", err)
-    os.Exit(1)
   }
-
+  
+  // Init Vinti Log
+  err = vlog.Init(config.LogThreshold);
+  
   http.HandleFunc("/submit", func(w http.ResponseWriter, r *http.Request) {
     api.APIHandler(config, w, r)
   })
 
   addr := fmt.Sprintf(":%d", config.ServerPort)
   if config.TlsCertPath != "" && config.TlsKeyPath != "" {
-    log.Printf("Starting SSL Vinti server on port %d", config.ServerPort)
+    vlog.Log(vlog.INFO, "Starting SSL Vinti server on port %d", config.ServerPort)
     err = http.ListenAndServeTLS(addr, config.TlsCertPath, config.TlsKeyPath, nil)
   } else {
-    log.Printf("Starting Vinti server on port %d", config.ServerPort)
+    vlog.Log(vlog.INFO, "Starting Vinti server on port %d", config.ServerPort)
     err = http.ListenAndServe(addr, nil)
   }
 

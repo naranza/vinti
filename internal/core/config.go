@@ -21,6 +21,7 @@ type Config struct {
   TlsKeyPath string
   ServerPort int
   TokenExpiresIn int
+  LogThreshold int
 }
 
 func DefaultConfig() *Config {
@@ -34,7 +35,7 @@ func DefaultConfig() *Config {
     TlsCertPath: "",
     TlsKeyPath: "",
     ServerPort: 20201,
-    TokenExpiresIn: 3600,
+    LogThreshold: 6,
   }
 }
 
